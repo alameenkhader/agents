@@ -35,3 +35,8 @@ The tool will:
 - Provides file-by-file change summaries
 - Generates contextual commit messages
 - Uses OpenAI's API with local Ollama backend
+
+## Future Enhancements
+
+- Allow configuration of the Ollama model via a config file or environment variable, with a default fallback model.
+- Extend functionality to support running as an MCP server.
