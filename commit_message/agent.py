@@ -1,14 +1,12 @@
 import subprocess
 import sys
 from openai import OpenAI
-from halo import Halo
 
 client = OpenAI(
   base_url='http://localhost:11434/v1',
   api_key='ollama',  # required, but unused
 )
 
-@Halo(text='Fetching git status', spinner='dots')
 def get_git_status(repo_path):
   """Fetch the git status of the repository."""
   result = subprocess.run(
@@ -20,7 +18,6 @@ def get_git_status(repo_path):
   )
   return result.stdout
 
-@Halo(text='Fetching git diff', spinner='dots')
 def get_file_diff(repo_path, filename):
   """Fetch the git diff for a specific file."""
   diff_result = subprocess.run(
@@ -33,31 +30,28 @@ def get_file_diff(repo_path, filename):
   return diff_result.stdout
 
 def summarize_file_changes(client, filename, action, diff_content):
-  """Summarize changes for a specific file using OpenAI."""
+  print(action, filename, "Summarizing changes...")
   if action == 'D':
     return f"File: {filename}, Action: {action}, Summary: File deleted, no diff to summarize."
 
-  with Halo(text=f"Summarizing changes for '{filename}", spinner="dots"):
-    response = client.chat.completions.create(
-      model="qwen2.5-coder:14b",
-      messages=[
-        {"role": "system", "content": "You are a git commit message assistant."},
-        {"role": "user", "content": f"Summarize the changes for the file '{filename}' with action '{action}'. Here is the diff:\n{diff_content}"}
-      ],
-    )
+  response = client.chat.completions.create(
+    model="qwen2.5-coder:14b",
+    messages=[
+      {"role": "system", "content": "You are a git commit message assistant."},
+      {"role": "user", "content": f"Summarize the changes for the file '{filename}' with action '{action}'. Here is the diff:\n{diff_content}"}
+    ],
+  )
   return f"File: {filename}, Action: {action}, Summary: {response.choices[0].message.content}"
 
 def generate_commit_message(client, summaries):
-  """Generate a commit message based on file summaries."""
-  with Halo(text="Generating commit message", spinner="dots"):
-    response = client.chat.completions.create(
-      model="qwen2.5-coder:14b",
-      messages=[
-        {"role": "system", "content": "You are a git commit message assistant."},
-        {"role": "user", "content": f"Generate a concise commit message based on the following summaries:\n{summaries}. Do not use markdown"}
-      ],
-      # response_format={"type": "json_object"},
-    )
+  print("Generating commit message...")
+  response = client.chat.completions.create(
+    model="qwen2.5-coder:14b",
+    messages=[
+      {"role": "system", "content": "You are a git commit message assistant."},
+      {"role": "user", "content": f"Generate a concise commit message based on the following summaries:\n{summaries}. Do not use markdown"}
+    ],
+  )
   return response.choices[0].message.content
 
 def main():
