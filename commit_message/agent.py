@@ -66,8 +66,6 @@ def main():
     print("No changes detected.")
     return
 
-  print("Git Status:\n", git_status)
-
   for line in git_status.splitlines():
     parts = line.split()
     action, filename = parts[0], parts[1]
@@ -79,7 +77,8 @@ def main():
     summaries.append(summarize_file_changes(client, filename, action, diff_content))
 
   commit_message = generate_commit_message(client, summaries)
-  print("\nGenerated Commit Message:", commit_message)
+  print("\n")
+  print(commit_message)
 
 if __name__ == "__main__":
   main()
