@@ -54,8 +54,9 @@ def generate_commit_message(client, summaries):
       model="qwen2.5-coder:14b",
       messages=[
         {"role": "system", "content": "You are a git commit message assistant."},
-        {"role": "user", "content": f"Generate a commit message based on the following summaries:\n{summaries}."}
+        {"role": "user", "content": f"Generate a concise commit message based on the following summaries:\n{summaries}. Do not use markdown"}
       ],
+      # response_format={"type": "json_object"},
     )
   return response.choices[0].message.content
 
@@ -70,6 +71,8 @@ def main():
   if not git_status:
     print("No changes detected.")
     return
+
+  print("Git Status:\n", git_status)
 
   for line in git_status.splitlines():
     parts = line.split()
