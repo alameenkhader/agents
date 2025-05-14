@@ -21,7 +21,7 @@ sh setup.sh
 Run the script by providing the repository path:
 
 ```bash
-python agent.py /path/to/your/repo
+uv run agent.py /path/to/your/repo
 ```
 
 The tool will:
