@@ -20,12 +20,6 @@ const client = new OpenAI({
 
 const messages = [
   { role: "developer", content: "Talk like a senior software engineer." },
-  {
-    role: "user",
-    content: `
-    What is the current working direcotory?
-    `,
-  },
 ];
 
 console.log("##############################################################");
@@ -58,10 +52,32 @@ async function chat() {
   }
 }
 
+async function chatLoop() {
+  while (true) {
+    // get user input
+    const userInput = await new Promise((resolve) => {
+      process.stdin.once("data", (data) => {
+        resolve(data.toString().trim());
+      });
+    });
+
+    if (userInput.toLowerCase() === "exit") {
+      break;
+    }
+
+    messages.push({
+      role: "user",
+      content: userInput,
+    });
+
+    await chat();
+  }
+}
+
 // const content = completion.choices[0].message.content;
 // const finalContent = content.split("</think>").at(-1);
 // console.log("Final content:\n", finalContent);
 
-await chat();
+await chatLoop();
 
 await mcpHandler.dispose();
