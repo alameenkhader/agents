@@ -1,5 +1,6 @@
 import { promises as fs } from "fs";
 import path from "path";
+import { fileURLToPath } from "url";
 import { MCPClient } from "mcp-client";
 
 class MCPHandler {
@@ -18,6 +19,7 @@ class MCPHandler {
       // console.debug("MCP clients: ", this.clients);
       await this.fetchClientTools();
       // console.debug("Client tools: ", this.clientTools);
+      console.log("Tools discovered:", Object.keys(this.clientTools).length);
     } catch (error) {
       console.error(`Failed to initialize MCP: ${error.message}`);
     }
@@ -25,6 +27,20 @@ class MCPHandler {
 
   availableTools() {
     return Object.values(this.clientTools).map((tool) => tool.toolFunction);
+  }
+
+  async callTool({ name, arguments: args }) {
+    const tool = this.clientTools[name];
+    if (!tool) {
+      throw new Error(`Tool ${name} not found.`);
+    }
+
+    const client = this.clients[tool.clientName];
+    if (!client) {
+      throw new Error(`Client ${tool.clientName} not found for tool ${name}.`);
+    }
+
+    return await client.callTool({ name, arguments: JSON.parse(args) });
   }
 
   async dispose() {
@@ -84,8 +100,11 @@ class MCPHandler {
   }
 
   getConfigPath() {
+    const __filename = fileURLToPath(import.meta.url);
+    const __dirname = path.dirname(__filename);
+
     return (
-      process.env.MCP_CONFIG_PATH || path.join(process.cwd(), "mcp-config.json")
+      process.env.MCP_CONFIG_PATH || path.join(__dirname, "mcp-config.json")
     );
   }
 }

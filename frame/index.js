@@ -18,54 +18,50 @@ const client = new OpenAI({
   baseURL: process.env["OPENAI_BASE_URL"],
 });
 
-const spinner = yoctoSpinner({ text: "Generating" }).start();
 const messages = [
   { role: "developer", content: "Talk like a senior software engineer." },
   {
     role: "user",
     content: `
-      What is the current working directory?
+    What is the current working direcotory?
     `,
   },
 ];
-const completion = await client.chat.completions.create({
-  model: "qwen3:30b",
-  messages,
-  tools: mcpHandler.availableTools(),
-});
-spinner.stop();
-
-// const message = completion.choices[0].message;
-// if (message.tool_calls.length > 0) {
-//   console.log("Completion:", completion);
-//   const func = completion.choices[0].message?.tool_calls[0].function;
-//   console.log(
-//     "message:",
-//     completion.choices[0].message?.tool_calls[0].function
-//   );
-
-//   if (completion.choices[0].message?.tool_calls[0].function) {
-//     spinner.start(`Tool call(${func.name})`);
-//     const result = await mcpClient.callTool({
-//       name: func.name,
-//       arguments: JSON.parse(func.arguments),
-//     });
-//     spinner.stop();
-//     console.log("Result:", result);
-//   }
-// } else {
-//   console.log("##############################################################");
-//   console.log(message.content);
-// }
 
 console.log("##############################################################");
-console.log("choices: ", completion.choices.length);
-completion.choices.forEach((choice) => {
-  console.log("Choice:", choice?.message.tool_calls?.[0]);
-});
+
+async function chat() {
+  const spinner = yoctoSpinner({ text: "LLM" }).start();
+  const completion = await client.chat.completions.create({
+    model: "qwen3:30b",
+    messages,
+    tools: mcpHandler.availableTools(),
+  });
+  spinner.stop("√ LLM");
+  // console.log("choices: ", completion.choices.length);
+  // console.log("message:", completion.choices[0].message);
+  const message = completion.choices[0].message;
+  messages.push(message);
+  if (message.tool_calls?.length > 0) {
+    const func = message.tool_calls[0].function;
+    spinner.start(`Tool call(${func.name})`);
+    const result = await mcpHandler.callTool(func);
+    spinner.stop(`√ Tool call(${func.name})`);
+    // console.log("Result:", result);
+    messages.push({
+      role: "tool",
+      content: JSON.stringify(result),
+    });
+    chat();
+  } else {
+    console.log(message.content);
+  }
+}
 
 // const content = completion.choices[0].message.content;
 // const finalContent = content.split("</think>").at(-1);
 // console.log("Final content:\n", finalContent);
+
+await chat();
 
 await mcpHandler.dispose();
