@@ -1,12 +1,4 @@
 {
-  "web": {
-    "type": "stdio",
-    "command": "/Users/alameen/.nvm/versions/node/v22.14.0/bin/npx",
-    "args": ["-y", "tavily-mcp@0.2.0"],
-    "env": {
-      "TAVILY_API_KEY": "YOUR_TAVILY_API_KEY_HERE"
-    }
-  },
   "shell": {
     "type": "stdio",
     "command": "/Users/alameen/.nvm/versions/node/v22.14.0/bin/npx",
