@@ -8,10 +8,10 @@ import MCPHandler from "./mcpHandler.js";
 const mcpHandler = new MCPHandler();
 await mcpHandler.init();
 
-console.debug("Debug info:");
-console.debug("OpenAI base URL:", process.env["OPENAI_BASE_URL"]);
-console.debug("Model:", process.env["OPENAI_MODEL"]);
-console.debug("apiKey:", process.env["OPENAI_API_KEY"]);
+// console.debug("Debug info:");
+// console.debug("OpenAI base URL:", process.env["OPENAI_BASE_URL"]);
+// console.debug("Model:", process.env["OPENAI_MODEL"]);
+// console.debug("apiKey:", process.env["OPENAI_API_KEY"]);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
