@@ -1,34 +1,32 @@
 import "dotenv/config";
+import { promises as fs } from "fs";
+import path from "path";
+import { fileURLToPath } from "url";
 import yoctoSpinner from "yocto-spinner";
-import OpenAI from "openai";
 import MCPHandler from "./mcpHandler.js";
 
 const mcpHandler = new MCPHandler();
 await mcpHandler.init();
-
-// await mcpHandler.dispose();
-// console.log("Early exit for debugging");
-// process.exit(0);
 
 console.debug("Debug info:");
 console.debug("OpenAI base URL:", process.env["OPENAI_BASE_URL"]);
 console.debug("Model:", process.env["OPENAI_MODEL"]);
 console.debug("apiKey:", process.env["OPENAI_API_KEY"]);
 
-const client = new OpenAI({
-  apiKey: process.env["OPENAI_API_KEY"],
-  baseURL: process.env["OPENAI_BASE_URL"],
-});
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const systemPromptPath = path.join(__dirname, "prompt.txt");
+const systemPrompt = await fs
+  .readFile(systemPromptPath, "utf8")
+  .catch((error) => {
+    console.error("Failed to read system prompt file:", error);
+    process.exit(1);
+  });
 
 const messages = [
   {
     role: "system",
-    content: `
-    You are a coding assistant. You will help the user manage tasks and projects with version control example Git.
-
-    Do all the Git actions for the current working directory and for the current branch.
-    The 'run_command' function could be used to execute a Git command.
-    `,
+    content: systemPrompt,
   },
 ];
 
@@ -38,7 +36,8 @@ async function chat() {
   const spinner = yoctoSpinner({ text: "LLM" }).start();
 
   const response = await fetch(
-    `${process.env.OPENAI_BASE_URL}/chat/completions`,
+    // `${process.env.OPENAI_BASE_URL}/chat/completions`,
+    "http://127.0.0.1:8080/v1/chat/completions",
     {
       method: "POST",
       headers: {
@@ -46,15 +45,15 @@ async function chat() {
         Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
       },
       body: JSON.stringify({
-        // Model configuration parameters
         model: process.env.OPENAI_MODEL, // e.g., "QwQ-32B"
         temperature: 0.6,
         top_p: 0.95,
+        top_k: 20,
+        min_p: 0,
+        presence_penalty: 1.5,
         max_completion_tokens: 8192, // Ensure ample space for reasoning
         reasoning_format: "hidden", // parsed, raw or hidden
         tools: mcpHandler.availableTools(), // Function/tool definitions
-
-        // Use dynamic messages array from your code
         messages: messages, // Ensure this includes: [system_prompt, user_query, ..., latest_assistant_output]
       }),
     }
@@ -117,10 +116,6 @@ async function chatLoop() {
     await chat();
   }
 }
-
-// const content = completion.choices[0].message.content;
-// const finalContent = content.split("</think>").at(-1);
-// console.log("Final content:\n", finalContent);
 
 await chatLoop();
 

@@ -65,12 +65,18 @@ class MCPHandler {
 
   async initClients() {
     Object.entries(this.mcpServers).forEach(async ([name, config]) => {
-      const client = new MCPClient({
-        name,
-        version: "1.0.0",
-      });
-      await client.connect(config);
-      this.clients[name] = client;
+      try {
+        const client = new MCPClient({
+          name,
+          version: "1.0.0",
+        });
+        await client.connect(config);
+        this.clients[name] = client;
+      } catch (error) {
+        console.error(
+          `Failed to initialize MCP client ${name}: ${error.message}`
+        );
+      }
     });
   }
 
