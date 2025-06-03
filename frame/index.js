@@ -36,11 +36,6 @@ console.log("##############################################################");
 
 async function chat() {
   const spinner = yoctoSpinner({ text: "LLM" }).start();
-  // const completion = await client.chat.completions.create({
-  //   model: process.env["OPENAI_MODEL"],
-  //   messages,
-  //   tools: mcpHandler.availableTools(),
-  // });
 
   const response = await fetch(
     `${process.env.OPENAI_BASE_URL}/chat/completions`,
@@ -56,6 +51,7 @@ async function chat() {
         temperature: 0.6,
         top_p: 0.95,
         max_completion_tokens: 8192, // Ensure ample space for reasoning
+        reasoning_format: "hidden", // parsed, raw or hidden
         tools: mcpHandler.availableTools(), // Function/tool definitions
 
         // Use dynamic messages array from your code
@@ -76,9 +72,11 @@ async function chat() {
   // console.log("choices: ", completion.choices.length);
   // console.log("message:", completion.choices[0].message);
   const message = completion.choices[0].message;
-  messages.push({ role: message.role, content: message.content });
-  console.log("All messages so far:");
-  console.log(messages);
+  if (!!message.content) {
+    messages.push({ role: message.role, content: message.content });
+  }
+  // console.log("All messages so far:");
+  // console.log(messages);
   if (message.tool_calls?.length > 0) {
     const toolCall = message.tool_calls[0];
     const func = toolCall.function;
