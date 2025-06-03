@@ -3,14 +3,14 @@
     "type": "stdio",
     "command": "/Users/alameen/.nvm/versions/node/v22.14.0/bin/npx",
     "args": ["-y", "mcp-shell"]
-  }//,
-  // "filesystem": {
-  //   "type": "stdio",
-  //   "command": "/Users/alameen/.nvm/versions/node/v22.15.1/bin/npx",
-  //   "args": [
-  //     "-y",
-  //     "@modelcontextprotocol/server-filesystem",
-  //     "/Users/alameen/Code/agents"
-  //   ]
-  // }
+  },
+  "filesystem": {
+    "type": "stdio",
+    "command": "/Users/alameen/.nvm/versions/node/v22.15.1/bin/npx",
+    "args": [
+      "-y",
+      "@modelcontextprotocol/server-filesystem",
+      "/Users/alameen/Code/agents"
+    ]
+  }
 }

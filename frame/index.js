@@ -79,9 +79,9 @@ async function chat() {
   if (message.tool_calls?.length > 0) {
     const toolCall = message.tool_calls[0];
     const func = toolCall.function;
-    spinner.start(`Tool call(${func.name})`);
+    spinner.start(`Tool call(${JSON.stringify(func)})`);
     const result = await mcpHandler.callTool(func);
-    spinner.stop(`√ Tool call(${func.name})`);
+    spinner.stop(`√ Tool call(${JSON.stringify(func)})`);
     // console.log("Result:", result);
     messages.push({
       role: "tool",
