@@ -11,24 +11,24 @@ from google.adk.code_executors import BuiltInCodeExecutor
 
 load_dotenv()
 
-# def show_python_code_and_result(response):
-#     for i in range(len(response)):
-#         # Check if the response contains a valid function call result from the code executor
-#         if (
-#             (response[i].content.parts)
-#             and (response[i].content.parts[0])
-#             and (response[i].content.parts[0].function_response)
-#             and (response[i].content.parts[0].function_response.response)
-#         ):
-#             response_code = response[i].content.parts[0].function_response.response
-#             if "result" in response_code and response_code["result"] != "```":
-#                 if "tool_code" in response_code["result"]:
-#                     print(
-#                         "Generated Python Code >> ",
-#                         response_code["result"].replace("tool_code", ""),
-#                     )
-#                 else:
-#                     print("Generated Python Response >> ", response_code["result"])
+def show_python_code_and_result(response):
+    for i in range(len(response)):
+        # Check if the response contains a valid function call result from the code executor
+        if (
+            (response[i].content.parts)
+            and (response[i].content.parts[0])
+            and (response[i].content.parts[0].function_response)
+            and (response[i].content.parts[0].function_response.response)
+        ):
+            response_code = response[i].content.parts[0].function_response.response
+            if "result" in response_code and response_code["result"] != "```":
+                if "tool_code" in response_code["result"]:
+                    print(
+                        "Generated Python Code >> ",
+                        response_code["result"].replace("tool_code", ""),
+                    )
+                else:
+                    print("Generated Python Response >> ", response_code["result"])
 
 
 retry_config = types.HttpRetryOptions(
@@ -142,11 +142,70 @@ print("🔧 Available tools:")
 print("  • get_fee_for_payment_method - Looks up company fee structure")
 print("  • get_exchange_rate - Gets current exchange rates")
 
-# Test the currency agent
-currency_runner = InMemoryRunner(agent=currency_agent)
-# _ = await currency_runner.run_debug(
-#     "I want to convert 500 US Dollars to Euros using my Platinum Credit Card. How much will I receive?"
-# )
-asyncio.run(currency_runner.run_debug(
-    "I want to convert 500 US Dollars to Euros using my Platinum Credit Card. How much will I receive?"
+calculation_agent = LlmAgent(
+    name="CalculationAgent",
+    model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
+    instruction="""You are a specialized calculator that ONLY responds with Python code. You are forbidden from providing any text, explanations, or conversational responses.
+
+     Your task is to take a request for a calculation and translate it into a single block of Python code that calculates the answer.
+
+     **RULES:**
+    1.  Your output MUST be ONLY a Python code block.
+    2.  Do NOT write any text before or after the code block.
+    3.  The Python code MUST calculate the result.
+    4.  The Python code MUST print the final result to stdout.
+    5.  You are PROHIBITED from performing the calculation yourself. Your only job is to generate the code that will perform the calculation.
+
+    Failure to follow these rules will result in an error.
+       """,
+    code_executor=BuiltInCodeExecutor(),  # Use the built-in Code Executor Tool. This gives the agent code execution capabilities
+)
+
+enhanced_currency_agent = LlmAgent(
+    name="enhanced_currency_agent",
+    model=Gemini(model="gemini-2.5-flash-lite", retry_options=retry_config),
+    # Updated instruction
+    instruction="""You are a smart currency conversion assistant. You must strictly follow these steps and use the available tools.
+
+  For any currency conversion request:
+
+   1. Get Transaction Fee: Use the get_fee_for_payment_method() tool to determine the transaction fee.
+   2. Get Exchange Rate: Use the get_exchange_rate() tool to get the currency conversion rate.
+   3. Error Check: After each tool call, you must check the "status" field in the response. If the status is "error", you must stop and clearly explain the issue to the user.
+   4. Calculate Final Amount (CRITICAL): You are strictly prohibited from performing any arithmetic calculations yourself. You must use the calculation_agent tool to generate Python code that calculates the final converted amount. This
+      code will use the fee information from step 1 and the exchange rate from step 2.
+   5. Provide Detailed Breakdown: In your summary, you must:
+       * State the final converted amount.
+       * Explain how the result was calculated, including:
+           * The fee percentage and the fee amount in the original currency.
+           * The amount remaining after deducting the fee.
+           * The exchange rate applied.
+    """,
+    tools=[
+        get_fee_for_payment_method,
+        get_exchange_rate,
+        AgentTool(agent=calculation_agent),  # Using another agent as a tool!
+    ],
+)
+
+print("✅ Enhanced currency agent created")
+print("🎯 New capability: Delegates calculations to specialist agent")
+print("🔧 Tool types used:")
+print("  • Function Tools (fees, rates)")
+print("  • Agent Tool (calculation specialist)")
+
+enhanced_runner = InMemoryRunner(agent=enhanced_currency_agent)
+response = asyncio.run(enhanced_runner.run_debug(
+    "Convert 1,250 USD to INR using a Bank Transfer. Show me the precise calculation."
 ))
+
+show_python_code_and_result(response)
+
+# # Test the currency agent
+# currency_runner = InMemoryRunner(agent=currency_agent)
+# # _ = await currency_runner.run_debug(
+# #     "I want to convert 500 US Dollars to Euros using my Platinum Credit Card. How much will I receive?"
+# # )
+# asyncio.run(currency_runner.run_debug(
+#     "I want to convert 500 US Dollars to Euros using my Platinum Credit Card. How much will I receive?"
+# ))

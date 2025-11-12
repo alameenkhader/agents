@@ -1,4 +1,4 @@
-# Day 2a - Agent tools
+# Day 2 - Agent tools
 
 https://www.kaggle.com/code/kaggle5daysofai/day-2a-agent-tools/notebook
 
@@ -10,6 +10,7 @@ source venv/bin/activate
 
 ### Install dependencies
 python3 -m pip install google-adk
+python3 -m pip install ipython
 
 ### ENVS
 
