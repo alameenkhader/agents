@@ -9,7 +9,7 @@ python3 -m venv venv # To setup venv, run this only once to setup
 source venv/bin/activate
 
 ### Install dependencies
-python3 -m pip install google-adk
+./venv/bin/python3 -m pip install google-adk
 python3 -m pip install ipython
 
 ### ENVS
